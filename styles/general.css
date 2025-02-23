@@ -1,0 +1,166 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Jersey+20&family=Reddit+Mono:wght@200..900&family=Rubik:ital,wght@0,300..900;1,300..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+
+body {
+	
+	background-color: #ededed; /* #e9e6df    #fff7fa   #ffffff  #ededed */
+
+	font-family: "Rubik", sans-serif;
+
+	margin: 0;
+	padding: 0;
+
+	/* padding-bottom: 2000px; */
+
+}
+
+footer {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	background-color: #d6d4d4;
+
+	padding-top: 20px;
+	padding-bottom: 20px;
+	padding-left: 30px;
+
+	position: absolute;
+	left: 0px;
+	bottom: 0px;
+	width: 100%;
+}
+
+code {
+	background-color: #e8dfdf;
+	border-radius: 10px;
+	font-size: 16px;
+}
+
+img {
+	margin-bottom: 20px;
+}
+
+.sample-1 {
+	color: #5a5653;
+}
+
+.sample-2 {
+	color: #323232;
+}
+
+
+.container {
+
+	display: flex;
+	flex-direction: column;
+
+	/*width: auto; */
+
+	/* align-items: center; */
+
+	min-width: 600px;
+
+	border-width: 3px;
+	border-style: solid;
+	border-color: #323232;
+
+	margin-top: 60px;
+
+	margin-right: 200px;
+	margin-left: 200px;
+
+}
+
+
+a {
+	font-family: "Rubik", sans-serif;
+	font-style: normal;
+
+	color: rgb(0, 0, 0);
+
+	text-decoration: underline 1px rgba(0, 0, 0, 0);
+
+	transition: color 0.3s;
+}
+
+a:hover {
+	color: #8a5cf5; /*   b59e0d */
+	/* text-decoration: underline 1px rgba(0, 0, 0, 1) */
+}
+
+.visible-link {
+	color: #8a5cf5;
+	font-weight: bold;
+} 
+
+p, table {
+	font-family: "Rubik", sans-serif;
+	font-size: 16px;
+	font-style: normal;	
+	margin: 0;
+}
+
+.selected-location-link {
+	cursor: pointer;
+	color: #8a5cf5;
+}
+
+.location-link {
+
+	cursor: pointer;
+	transition: color 0.3s;
+
+}
+
+.location-link:hover {
+
+	color: #8a5cf5;
+	
+}
+
+
+.tag {
+
+	color: white;
+	background-color: #8a5cf5; /*  ba3f62 */
+
+	font-size: 16px;
+	text-decoration: none;
+	
+	padding-top: 3px;
+	padding-bottom: 3px;
+
+	padding-left: 8px;
+	padding-right: 8px;
+
+	
+	border-width: 1px;
+	border-style: solid;
+	border-color: #8a5cf5;
+
+	border-radius: 14%;
+
+	margin-right: 6px;
+
+	cursor: pointer;
+
+	transition: background-color 0.3s, color 0.3s;
+
+}
+
+
+.tag:hover {
+
+	background-color: #ededed;
+	color: #8a5cf5;
+
+}
+
+.tags {
+
+	/* margin: 0;
+	padding: 0; */
+
+	display: flex;
+	flex-direction: row;
+}
